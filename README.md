@@ -10,6 +10,7 @@ Based on https://github.com/JPBotelho/Catmull-Rom-Splines
 
 Add CatmullRomSplines to any GameObject. To create a spline you need to add at least 3 transforms to the Control Point Transforms public variable. If you enable Preview Spline, the generated spline will update in real time when the Control Point Transforms variable updates or if a point is moved.
 Resolution controls the amount of interpolation steps between control points.
+When you finish editing the spline, push the save button in the spline inspector to serialise the data to the Udon Behaviour.
 The spline data will be stored in the Positions, Tangents and Normals arrays and can be used at runtime.
 
 **Runtime**
