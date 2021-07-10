@@ -19,6 +19,8 @@ public class CatmullRomSpline : UdonSharpBehaviour
     [HideInInspector] public bool drawTangents;
     [HideInInspector] public float normalExtrusion;
     [HideInInspector] public float tangentExtrusion;
+
+    [HideInInspector] public bool save;
     
     public Transform[] controlPointTransforms;
     
@@ -187,6 +189,14 @@ public class CatmullRomSpline : UdonSharpBehaviour
                 normals[currentPoint * resolution + tesselatedPoint] = pointNormal;
             }
         }
+        
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+        if (save)
+        {
+            this.ApplyProxyModifications();
+            save = false;
+        }
+#endif
     }
     #region CALCULATE POINTS
     //Calculates curve position at t[0, 1]
@@ -228,6 +238,10 @@ public class CatmullRomSpline : UdonSharpBehaviour
     /// <param name="newControlPoints">New transform array</param>
     public void UpdateControlPointTransforms(Transform[] newControlPoints)
     {
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+        this.UpdateProxy();
+#endif
+        
         if (newControlPoints == null || newControlPoints.Length <= 0)
         {
             Debug.LogError("Invalid control points");
@@ -247,6 +261,10 @@ public class CatmullRomSpline : UdonSharpBehaviour
     /// <param name="newControlPoints">New vector3 array</param>
     public void UpdateControlPointVectors(Vector3[] newControlPoints)
     {
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+        this.UpdateProxy();
+#endif
+        
         if (newControlPoints == null || newControlPoints.Length <= 0)
         {
             Debug.LogError("Invalid control points");
@@ -372,8 +390,8 @@ public class CatmullRomSplineInspector : Editor
                 tangentExtrusion = EditorGUILayout.Slider("Tangent length", tangentExtrusion, 0, 3);
         }
 
-        //bool updatePositions = GUILayout.Button("Update spline positions");
-
+        bool save = GUILayout.Button("Save Spline Changes");
+        
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(catmullRomSpline, "Modify CatmullRomSpline values");
@@ -388,6 +406,8 @@ public class CatmullRomSplineInspector : Editor
             
             catmullRomSpline.normalExtrusion = normalExtrusion;
             catmullRomSpline.tangentExtrusion = tangentExtrusion;
+
+            catmullRomSpline.save = save;
 
             // else
             // {
