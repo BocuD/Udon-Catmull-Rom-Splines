@@ -29,6 +29,8 @@ public class CatmullRomSpline : UdonSharpBehaviour
     public Vector3[] positions;
     public Vector3[] tangents;
     public Vector3[] normals;
+    public float splineLength;
+    public float[] segmentLength;
     /// <summary>
     /// Setup a spline based on a Transform array
     /// </summary>
@@ -190,6 +192,22 @@ public class CatmullRomSpline : UdonSharpBehaviour
             }
         }
         
+        //calculate total spline length
+        splineLength = 0;
+        segmentLength = new float[positions.Length - (closedLoop ? 0 : 1)];
+        
+        for (int i = 1; i < positions.Length; i++)
+        {
+            segmentLength[i-1] = Vector3.Distance(positions[i-1], positions[i]);
+            splineLength += segmentLength[i - 1];
+        }
+
+        if (closedLoop)
+        {
+            segmentLength[positions.Length-1] = Vector3.Distance(positions[positions.Length-1], positions[0]);
+            splineLength += segmentLength[positions.Length-1];
+        }
+        
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
         if (save)
         {
@@ -198,6 +216,50 @@ public class CatmullRomSpline : UdonSharpBehaviour
         }
 #endif
     }
+
+    public Vector3 GetWorldSpacePosition(float t)
+    {
+        if (t == 0) return positions[0];
+        if (t == 1) return positions[positions.Length-1];
+        
+        //find position nearest to t
+        float targetLength = t * splineLength;
+
+        float measuredLength = 0;
+        int startSegment = 0;
+        int endSegment = 0;
+        
+        for (int i = 0; i < segmentLength.Length; i++)
+        {
+            measuredLength += segmentLength[i];
+            
+            if (measuredLength > targetLength)
+            {
+                endSegment = startSegment + 1;
+                measuredLength -= segmentLength[i];
+                break;
+            }
+
+            startSegment++;
+        }
+
+        //loops.. are weird as fuck *sigh*
+        if (startSegment == -1)
+        {
+            startSegment = 0;
+            endSegment = 1;
+        }
+        
+        //loops.. are weird as fuck *sigh*
+        if (startSegment == segmentLength.Length - 1)
+            endSegment = 0;
+
+        t = targetLength - measuredLength;
+        t /= segmentLength[startSegment];
+
+        return Vector3.Lerp(positions[startSegment], positions[endSegment], t);
+    }
+    
     #region CALCULATE POINTS
     //Calculates curve position at t[0, 1]
     public Vector3 CalculatePosition(Vector3 start, Vector3 end, Vector3 tanPoint1, Vector3 tanPoint2, float t)
