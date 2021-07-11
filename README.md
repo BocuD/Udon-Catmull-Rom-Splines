@@ -21,3 +21,5 @@ Since you can't use AddComponent in Udon, you will need to prepare a prefab of a
 **Examples**
 
 SplineTester is a very simple script that uses GetWorldSpacePosition(float t) to make an object move along the spline smoothly. Add a reference to a CatmullRomSpline and set dt so that 0 < dt < 1.
+
+If you need help or find a bug, please let me know: BocuD#8400
