@@ -1,8 +1,8 @@
-﻿
+﻿using UnityEditor;
 using System;
+using System.Diagnostics;
 using UdonSharp;
 using UdonSharpEditor;
-using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using VRC.SDKBase;
@@ -30,7 +30,8 @@ public class CatmullRomSpline : UdonSharpBehaviour
     public Vector3[] tangents;
     public Vector3[] normals;
     public float splineLength;
-    public float[] segmentLength;
+    public float[] segmentLength; //the length of an individual segment, array size will be positions.length - 1
+    public float[] segmentTotalLength; //the length from position 0 to that segment
     /// <summary>
     /// Setup a spline based on a Transform array
     /// </summary>
@@ -41,7 +42,7 @@ public class CatmullRomSpline : UdonSharpBehaviour
     {
         if (targetControlPoints == null || targetControlPoints.Length <= 2 || targetResolution < 2)
         {
-            Debug.LogError("Catmull Rom Error: Too few control points or resolution too small");
+            UnityEngine.Debug.LogError("Catmull Rom Error: Too few control points or resolution too small");
         }
 
         controlPoints = new Vector3[targetControlPoints.Length];
@@ -66,7 +67,7 @@ public class CatmullRomSpline : UdonSharpBehaviour
     {
         if (targetControlPoints == null || targetControlPoints.Length <= 2 || targetResolution < 2)
         {
-            Debug.LogError("Catmull Rom Error: Too few control points or resolution too small");
+            UnityEngine.Debug.LogError("Catmull Rom Error: Too few control points or resolution too small");
         }
 
         controlPoints = targetControlPoints;
@@ -195,11 +196,14 @@ public class CatmullRomSpline : UdonSharpBehaviour
         //calculate total spline length
         splineLength = 0;
         segmentLength = new float[positions.Length - (closedLoop ? 0 : 1)];
+        segmentTotalLength = new float[positions.Length];
+        segmentTotalLength[0] = 0;
         
         for (int i = 1; i < positions.Length; i++)
         {
             segmentLength[i-1] = Vector3.Distance(positions[i-1], positions[i]);
             splineLength += segmentLength[i - 1];
+            segmentTotalLength[i] = splineLength;
         }
 
         if (closedLoop)
@@ -219,44 +223,57 @@ public class CatmullRomSpline : UdonSharpBehaviour
 
     public Vector3 GetWorldSpacePosition(float t)
     {
-        if (t == 0) return positions[0];
-        if (t == 1) return positions[positions.Length-1];
+        if (t <= 0) return positions[0];
+        if (t >= 1) return positions[positions.Length-1];
         
         //find position nearest to t
         float targetLength = t * splineLength;
-
-        float measuredLength = 0;
-        int startSegment = 0;
-        int endSegment = 0;
         
-        for (int i = 0; i < segmentLength.Length; i++)
+        //guess based on targetLength
+        //we know how many segments there are, so we can get a pretty close guess to the target from t
+
+        int startSegment = (int) (t * segmentLength.Length);;
+        int endSegment = 0;
+
+        //if the segmentTotalLength for the guess is lower than our target, start iterating, otherwise, start iterating backwards
+        if (segmentTotalLength[startSegment] < targetLength)
         {
-            measuredLength += segmentLength[i];
-            
-            if (measuredLength > targetLength)
+            for (; startSegment < segmentLength.Length; startSegment++)
             {
-                endSegment = startSegment + 1;
-                measuredLength -= segmentLength[i];
-                break;
+                if (segmentTotalLength[startSegment] > targetLength)
+                {
+                    startSegment--;
+                    endSegment = startSegment + 1;
+                    break;
+                }
             }
-
-            startSegment++;
         }
-
+        else
+        {
+            for (; startSegment > 0; startSegment--)
+            {
+                if (segmentTotalLength[startSegment] <= targetLength)
+                {
+                    endSegment = startSegment + 1;
+                    break;
+                }
+            }
+        }
+        
         //loops.. are weird as fuck *sigh*
         if (startSegment == -1)
         {
             startSegment = 0;
             endSegment = 1;
         }
-        
+
         //loops.. are weird as fuck *sigh*
         if (startSegment == segmentLength.Length - 1)
             endSegment = 0;
-
-        t = targetLength - measuredLength;
+        
+        t = targetLength - segmentTotalLength[startSegment];
         t /= segmentLength[startSegment];
-
+        
         return Vector3.Lerp(positions[startSegment], positions[endSegment], t);
     }
     
@@ -306,7 +323,7 @@ public class CatmullRomSpline : UdonSharpBehaviour
         
         if (newControlPoints == null || newControlPoints.Length <= 0)
         {
-            Debug.LogError("Invalid control points");
+            UnityEngine.Debug.LogError("Invalid control points");
         }
 
         controlPoints = new Vector3[newControlPoints.Length];
@@ -329,7 +346,7 @@ public class CatmullRomSpline : UdonSharpBehaviour
         
         if (newControlPoints == null || newControlPoints.Length <= 0)
         {
-            Debug.LogError("Invalid control points");
+            UnityEngine.Debug.LogError("Invalid control points");
         }
 
         controlPoints = newControlPoints;
@@ -346,7 +363,7 @@ public class CatmullRomSpline : UdonSharpBehaviour
     {
         if (newResolution < 2)
         {
-            Debug.LogError($"Invalid Resolution: {newResolution}. Make sure it's >= 1");
+            UnityEngine.Debug.LogError($"Invalid Resolution: {newResolution}. Make sure it's >= 1");
         }
 
         resolution = newResolution;
@@ -363,11 +380,11 @@ public class CatmullRomSpline : UdonSharpBehaviour
         {
             if (i == positions.Length - 1 && closedLoop)
             {
-                Debug.DrawLine(positions[i], positions[0], color);
+                UnityEngine.Debug.DrawLine(positions[i], positions[0], color);
             }
             else if (i < positions.Length - 1)
             {
-                Debug.DrawLine(positions[i], positions[i + 1], color);
+                UnityEngine.Debug.DrawLine(positions[i], positions[i + 1], color);
             }
         }
     }
@@ -376,7 +393,7 @@ public class CatmullRomSpline : UdonSharpBehaviour
     {
         for (int i = 0; i < normals.Length; i++)
         {
-            Debug.DrawLine(positions[i], positions[i] + normals[i] * extrusion, color);
+            UnityEngine.Debug.DrawLine(positions[i], positions[i] + normals[i] * extrusion, color);
         }
     }
 
@@ -384,7 +401,7 @@ public class CatmullRomSpline : UdonSharpBehaviour
     {
         for (int i = 0; i < tangents.Length; i++)
         {
-            Debug.DrawLine(positions[i], positions[i] + tangents[i] * extrusion, color);
+            UnityEngine.Debug.DrawLine(positions[i], positions[i] + tangents[i] * extrusion, color);
         }
     }
     
