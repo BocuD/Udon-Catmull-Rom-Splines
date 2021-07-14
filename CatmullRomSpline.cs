@@ -220,6 +220,8 @@ public class CatmullRomSpline : UdonSharpBehaviour
         }
 #endif
     }
+    
+    public int lastWorldSpaceSegmentIndex = 0;
 
     public Vector3 GetWorldSpacePosition(float t)
     {
@@ -270,6 +272,8 @@ public class CatmullRomSpline : UdonSharpBehaviour
         //loops.. are weird as fuck *sigh*
         if (startSegment == segmentLength.Length - 1)
             endSegment = 0;
+
+        lastWorldSpaceSegmentIndex = startSegment;
         
         t = targetLength - segmentTotalLength[startSegment];
         t /= segmentLength[startSegment];

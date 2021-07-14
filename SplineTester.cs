@@ -18,6 +18,6 @@ public class SplineTester : UdonSharpBehaviour
 			if (t >= 1)
 				t = 0;
 			transform.position = spline.GetWorldSpacePosition(t);
-		} 
+		}
 	}
 }
