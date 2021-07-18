@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UdonSharp;
-using UdonSharpEditor;
 using UnityEngine;
 using VRC.SDKBase;
 

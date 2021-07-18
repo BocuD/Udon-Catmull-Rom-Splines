@@ -1,12 +1,10 @@
-﻿using UnityEditor;
-using System;
-using System.Diagnostics;
-using UdonSharp;
-using UdonSharpEditor;
-using UnityEditorInternal;
+﻿using UdonSharp;
 using UnityEngine;
-using VRC.SDKBase;
-using VRC.Udon;
+
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+using UnityEditor;
+using UdonSharpEditor;
+#endif
 
 [ExecuteInEditMode]
 public class CatmullRomSpline : UdonSharpBehaviour

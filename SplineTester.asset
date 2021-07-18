@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: SplineTester
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: e50cf533a06654c4aa5fcdd85079cc3d,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 34302ef57fb6954478b0efde2dd12f50,
     type: 2}
   udonAssembly: 
   assemblyError: 

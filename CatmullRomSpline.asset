@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: CatmullRomSpline
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 8427b90df0c24ae4489268490540d3ef,
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 32f481f698f46af4c8188895c7c7a728,
     type: 2}
   udonAssembly: 
   assemblyError: 
